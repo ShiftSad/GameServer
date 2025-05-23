@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 @SuppressWarnings("UnusedReturnValue")
 @Getter
 public class MinestomServer {
+    private final @NotNull String game;
     private final @NotNull String name;
     private final @NotNull UUID uuid;
     private final int port;
@@ -24,11 +25,13 @@ public class MinestomServer {
     private final List<Module> modules;
 
     protected MinestomServer(
+            @NotNull String game,
             @NotNull String name,
             @NotNull UUID uuid,
             int port,
             @NotNull List<Module> modules
     ) {
+        this.game = game;
         this.name = name;
         this.uuid = uuid;
         this.port = port;
@@ -61,8 +64,12 @@ public class MinestomServer {
         return logger;
     }
 
-    // builder class
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static class Builder {
+        private String game;
         private String name;
         private UUID uuid;
         private int port;
@@ -76,6 +83,11 @@ public class MinestomServer {
 
         public Builder modules(Module... modules) {
             for (Module module : modules) this.module(module);
+            return this;
+        }
+
+        public Builder game(String game) {
+            this.game = game;
             return this;
         }
 
@@ -95,10 +107,11 @@ public class MinestomServer {
         }
 
         public MinestomServer build() {
+            if (game == null) throw new NullPointerException("game is null");
             if (name == null) throw new NullPointerException("name is null");
-            if (uuid == null) throw new NullPointerException("uuid is null");
             if (port <= 0) throw new IllegalArgumentException("port must be greater than 0");
-            return new MinestomServer(name, uuid, port, modules);
+            if (uuid == null) this.uuid = UUID.randomUUID();
+            return new MinestomServer(game, name, uuid, port, modules);
         }
     }
 }
