@@ -37,7 +37,7 @@ public class ConsulConfigModule implements Module {
 
     @Override
     public @NotNull BootPriority getBootPriority() {
-        return BootPriority.HIGHEST;
+        return BootPriority.CRITICAL;
     }
 
     @Override
