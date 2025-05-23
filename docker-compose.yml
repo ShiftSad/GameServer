@@ -1,0 +1,12 @@
+services:
+  consul:
+    image: hashicorp/consul
+    command: agent -dev -ui -client 0.0.0.0 # Simple dev mode agent
+    ports:
+      - "8500:8500" # Consul UI and API
+      - "8600:8600" # DNS
+    networks:
+      - game_server
+
+networks:
+  game_server:
