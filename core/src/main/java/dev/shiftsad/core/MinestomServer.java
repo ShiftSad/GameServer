@@ -2,8 +2,6 @@ package dev.shiftsad.core;
 
 import dev.shiftsad.core.modules.Module;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import net.minestom.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
@@ -20,9 +18,9 @@ import java.util.logging.Logger;
 public class MinestomServer {
     private final @NotNull String name;
     private final @NotNull UUID uuid;
-    private final @NotNull int port;
+    private final int port;
 
-    private final Logger logger;
+    private static Logger logger;
     private final List<Module> modules;
 
     protected MinestomServer(
@@ -36,14 +34,15 @@ public class MinestomServer {
         this.port = port;
         this.modules = modules;
 
-        this.logger = Logger.getLogger(name);
+        logger = Logger.getLogger(name);
     }
 
     public void start() {
         var server = MinecraftServer.init();
 
         modules.stream()
-                .sorted(Comparator.comparing(Module::getBootPriority))
+                .filter(it -> it.getBootPriority().getValue() == 0)
+                .sorted(Comparator.comparingInt(a -> a.getBootPriority().getValue()))
                 .forEach(module -> {
                     logger.info("Loading module " + module.getName());
                     var time = System.currentTimeMillis();
@@ -56,6 +55,10 @@ public class MinestomServer {
 
     public @Nullable Module findModule(Class<? extends Module> moduleClass) {
         return modules.stream().filter(module -> moduleClass.isAssignableFrom(module.getClass())).findFirst().orElse(null);
+    }
+
+    public static @NotNull Logger logger() {
+        return logger;
     }
 
     // builder class

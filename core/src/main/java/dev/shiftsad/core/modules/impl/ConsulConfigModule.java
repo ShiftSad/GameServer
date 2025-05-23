@@ -1,6 +1,7 @@
 package dev.shiftsad.core.modules.impl;
 
 import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.kv.model.GetValue;
 import dev.shiftsad.core.modules.BootPriority;
@@ -13,6 +14,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ConsulConfigModule implements Module {
 
@@ -50,12 +52,26 @@ public class ConsulConfigModule implements Module {
         GetValue getValue = response.getValue();
 
         if (getValue != null && getValue.getValue() != null) {
-            // The value is base64 encoded in Consul, so decode it
             byte[] decodedBytes = Base64.getDecoder().decode(getValue.getValue());
             return new String(decodedBytes, StandardCharsets.UTF_8);
         } else {
-            return null; // Key not found
+            return null;
         }
+    }
+
+    public boolean setConfigValue(@NotNull String key, @NotNull String value) {
+        Response<Boolean> response = consulClient.setKVValue(key, value);
+        return response.getValue();
+    }
+
+    public boolean deleteConfigValue(@NotNull String key) {
+        try {
+            consulClient.deleteKVValue(key);
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
 
     public Map<String, String> getConfigValuesByPrefix(String prefix) {
@@ -68,7 +84,6 @@ public class ConsulConfigModule implements Module {
                 if (value.getValue() != null) {
                     byte[] decodedBytes = Base64.getDecoder().decode(value.getValue());
                     String key = value.getKey();
-                    // Remove the prefix from the key if desired
                     if (key.startsWith(prefix)) {
                         key = key.substring(prefix.length());
                         if (key.startsWith("/")) {
